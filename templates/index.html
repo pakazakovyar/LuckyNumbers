@@ -1,0 +1,49 @@
+ <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>Lucky Numbers</title>
+        
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        
+    </head>
+    <body>
+        <h1>Lucky Numbers</h1>
+        <div id="message-box">Загрузка</div>
+
+        <div class="container">
+
+            <div class="board-section">
+                <h2>Вы</h2>
+                <div id="player-grid" class="grid"></div>
+            </div>
+            <div class="board-section">
+                <h2>Бот</h2>
+                <div id="bot-grid" class="grid"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div>
+                <span>В руке: </span>
+                <span id="hand-display" class="hand-tile">-</span>
+            </div>
+
+            <div id="action-area">
+            </div>
+
+            <div id="table-area">
+                <h3>Стол (<span id="table-count">0</span>)</h3>
+                <div id="table-numbers" class="table-numbers"></div>
+            </div>
+
+            <div style="margin-top: 10px; color: #666;">
+                В колоде: <span id="deck-count">0</span>
+            </div>
+
+            <button onclick="startGame()" class="btn btn-primary" style="margin-top:20px;">Начать новую игру</button>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    </body>
+    </html>
