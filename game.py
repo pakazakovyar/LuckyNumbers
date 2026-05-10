@@ -92,26 +92,26 @@ class LuckyNumbersLogic:
         penalty = 0
         for j in range(4):
             if j < col and field[row][j] == 0:
-                remaining_less = sum(self.cards_count[i] for i in range(1, val))
+                remaining_less = sum(self.cards_count[i] for i in range(1, val)) + len([num for num in self.opened_numbers if num < val])
                 if remaining_less < 1:
                     penalty += 5
                 elif remaining_less < 3:
                     penalty += 2
             if j > col and field[row][j] == 0:
-                remaining_more = sum(self.cards_count[i] for i in range(val + 1, 21))
+                remaining_more = sum(self.cards_count[i] for i in range(val + 1, 21)) + len([num for num in self.opened_numbers if num > val])
                 if remaining_more < 1:
                     penalty += 5
                 elif remaining_more < 3:
                     penalty += 2
         for i in range(4):
             if i < row and field[i][col] == 0:
-                remaining_less = sum(self.cards_count[k] for k in range(1, val))
+                remaining_less = sum(self.cards_count[k] for k in range(1, val)) + len([num for num in self.opened_numbers if num < val])
                 if remaining_less < 1:
                     penalty += 5
                 elif remaining_less < 3:
                     penalty += 2
             if i > row and field[i][col] == 0:
-                remaining_more = sum(self.cards_count[k] for k in range(val + 1, 21))
+                remaining_more = sum(self.cards_count[k] for k in range(val + 1, 21)) + len([num for num in self.opened_numbers if num > val])
                 if remaining_more < 1:
                     penalty += 5
                 elif remaining_more < 3:
