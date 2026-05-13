@@ -1,12 +1,6 @@
 from random import shuffle, choice
 
 
-# with open("params.txt", "r") as f:
-#     LOW_PENALTY, LARGE_PENALTY= map(int, f.readline().split())
-
-# LOW_PENALTY=2
-# LARGE_PENALTY=5
-
 class LuckyNumbersLogic:
     def __init__(self):
         self.closed_numbers = self.generate_closed_numbers()
@@ -14,33 +8,15 @@ class LuckyNumbersLogic:
         self.bot_field = [[0] * 4 for _ in range(4)]
         self.fill_diagonal(self.player_field)
         self.fill_diagonal(self.bot_field)
+
         self.opened_numbers = []
         self.opened_numbers.append(self.closed_numbers.pop(0))
+
         self.current_tile = None
         self.game_over = False
         self.winner = None
         self.message = "Игра началась! Сделайте первый ход."
-        self.cards_count = self.init_cards_count()
-        self.low_penalty = 0
-        self.large_penalty = 8
-        self.low_remaining_less = 1
-        self.high_remaining_less = 4
-        self.max_title_diff= 3
-        self.replace_title_diff = 7
 
-    def init_cards_count(self):
-        cards_count = {val: 2 for val in range(1, 21)}
-        for i in range(4):
-            for j in range(4):
-                bot_val = self.bot_field[j][j]
-                player_val = self.player_field[i][j]
-                if bot_val != 0:
-                    cards_count[bot_val] -= 1
-                if player_val != 0:
-                    cards_count[player_val] -= 1
-        for val in self.opened_numbers:
-            cards_count[val] -= 1
-        return cards_count
 
 
     def generate_closed_numbers(self):
@@ -49,46 +25,42 @@ class LuckyNumbersLogic:
         return numbers
 
     def fill_diagonal(self, field):
-        temp_lst = list(range(1, 21))
-        shuffle(temp_lst)
-        start_numbers = temp_lst[:4]
-        for num in start_numbers:
-            self.closed_numbers.remove(num)
-        # for _ in range(4):
-        #     start_numbers.append(self.closed_numbers.pop(0))
+        start_numbers = []
+        for _ in range(4):
+            start_numbers.append(self.closed_numbers.pop(0))
         start_numbers.sort()
         for i in range(4):
             field[i][i] = start_numbers[i]
 
-    def is_valid_placement(self, field, row, col, val):
+    def is_valid_placement(self, field, row, col, value):
         for j in range(4):
             if j == col:
                 continue
-            cur_val = field[row][j]
-            if cur_val == 0:
+            cur_value = field[row][j]
+            if cur_value == 0:
                 continue
-            if j < col and cur_val >= val:
+            if j < col and cur_value >= value:
                 return False
-            if j > col and cur_val <= val:
+            if j > col and cur_value <= value:
                 return False
 
         for i in range(4):
             if i == row:
                 continue
-            cur_val = field[i][col]
-            if cur_val == 0:
+            cur_value = field[i][col]
+            if cur_value == 0:
                 continue
-            if i < row and cur_val >= val:
+            if i < row and cur_value >= value:
                 return False
-            if i > row and cur_val <= val:
+            if i > row and cur_value <= value:
                 return False
         return True
 
-    def get_valid_moves(self, field, tile_val):
+    def get_valid_moves(self, field, tile_value):
         moves = []
         for i in range(4):
             for j in range(4):
-                if self.is_valid_placement(field, i, j, tile_val):
+                if self.is_valid_placement(field, i, j, tile_value):
                     moves.append((i, j))
         return moves
 
@@ -103,59 +75,26 @@ class LuckyNumbersLogic:
         target = 1 + (row + col) * (19 / 6)
         return abs(val - target)
 
-    def get_probability_penalty(self, field, row, col, val):
-        penalty = 0
-        for j in range(4):
-            if j < col and field[row][j] == 0:
-                remaining_less = sum(self.cards_count[i] for i in range(1, val)) + len([num for num in self.opened_numbers if num < val])
-                if remaining_less < self.low_remaining_less:
-                    penalty += self.large_penalty
-                elif remaining_less < self.high_remaining_less:
-                    penalty += self.low_penalty
-            if j > col and field[row][j] == 0:
-                remaining_more = sum(self.cards_count[i] for i in range(val + 1, 21)) + len([num for num in self.opened_numbers if num > val])
-                if remaining_more < self.low_remaining_less:
-                    penalty += self.large_penalty
-                elif remaining_more < self.high_remaining_less:
-                    penalty += self.low_penalty
-        for i in range(4):
-            if i < row and field[i][col] == 0:
-                remaining_less = sum(self.cards_count[k] for k in range(1, val)) + len([num for num in self.opened_numbers if num < val])
-                if remaining_less < self.low_remaining_less:
-                    penalty += self.large_penalty
-                elif remaining_less < self.high_remaining_less:
-                    penalty += self.low_penalty
-            if i > row and field[i][col] == 0:
-                remaining_more = sum(self.cards_count[k] for k in range(val + 1, 21)) + len([num for num in self.opened_numbers if num > val])
-                if remaining_more < self.low_remaining_less:
-                    penalty += self.large_penalty
-                elif remaining_more < self.high_remaining_less:
-                    penalty += self.low_penalty
-
-        return penalty
     def bot_turn(self):
-        # if self.game_over: return
+        if self.game_over: return
         best_move = None
 
         for idx, val in enumerate(self.opened_numbers):
             moves = self.get_valid_moves(self.bot_field, val)
-            for r, c in moves:
-                dist_score = self.evaluate_placement(r, c, val)
-                prob_penalty = self.get_probability_penalty(self.bot_field, r, c, val)
-                score = dist_score + prob_penalty
+            for i, j in moves:
+                score = self.evaluate_placement(i, j, val)
 
-                if self.bot_field[r][c] != 0:
-                    old_score = self.evaluate_placement(r, c, self.bot_field[r][c])
+                if self.bot_field[i][j] != 0:
+                    old_score = self.evaluate_placement(i, j, self.bot_field[i][j])
                     if score < old_score - 2:
                         if best_move is None or score < best_move[3]:
-                            best_move = (idx, r, c, score)
+                            best_move = (idx, i, j, score)
                 elif score < 5:
                     if best_move is None or score < best_move[3]:
-                        best_move = (idx, r, c, score)
+                        best_move = (idx, i, j, score)
 
         if best_move is None and self.closed_numbers:
             drawn_tile = self.closed_numbers.pop(0)
-            self.cards_count[drawn_tile] -= 1
             moves = self.get_valid_moves(self.bot_field, drawn_tile)
 
             if not moves:
@@ -197,12 +136,10 @@ class LuckyNumbersLogic:
             else:
                 self.message = f"Бот взял {val} со стола и поставил в [{r}, {c}]."
 
-        # if self.is_end(self.bot_field):
-        #     self.game_over = True
-        #     self.winner = "bot"
-        #     self.message = "БОТ ПОБЕДИЛ!"
         if self.is_end(self.bot_field):
-            self.message = "Бот завершил свое поле!"
+            self.game_over = True
+            self.winner = "bot"
+            self.message = "БОТ ПОБЕДИЛ!"
 
     def take_tile_from_deck(self):
         if self.game_over:
@@ -216,7 +153,6 @@ class LuckyNumbersLogic:
             return False
 
         self.current_tile = self.closed_numbers.pop(0)
-        self.cards_count[self.current_tile] -= 1
         self.message = f"Вы взяли число: {self.current_tile}"
         return True
 
@@ -236,7 +172,6 @@ class LuckyNumbersLogic:
         return True
 
     def place_tile(self, row, col):
-        # 1. Базовые проверки перед ходом
         if self.game_over:
             self.message = "Игра окончена!"
             return False
@@ -244,18 +179,15 @@ class LuckyNumbersLogic:
             self.message = "Сначала возьмите число!"
             return False
 
-        # 2. Проверка валидности координат и правил размещения
         valid_moves = self.get_valid_moves(self.player_field, self.current_tile)
         if (row, col) not in valid_moves:
             self.message = "Сюда нельзя поставить это число!"
             return False
 
-        # 3. Выполнение хода игрока
         old_val = self.player_field[row][col]
+        self.player_field[row][col] = self.current_tile
         placed_tile = self.current_tile
-        self.player_field[row][col] = placed_tile
 
-        # Если на месте была карта, отправляем её на стол
         if old_val != 0:
             self.opened_numbers.append(old_val)
             self.message = f"Вы заменили {old_val} на {placed_tile}."
@@ -264,45 +196,29 @@ class LuckyNumbersLogic:
 
         self.current_tile = None
 
-        # 4. Ход бота (он ходит даже если игрок заполнил последнюю клетку)
-        # Это обеспечивает боту "право последнего хода"
-        self.bot_turn()
-
-        # 5. Финальная проверка условий победы
-        player_finished = self.is_end(self.player_field)
-        bot_finished = self.is_end(self.bot_field)
-
-        if player_finished and bot_finished:
-            self.game_over = True
-            self.winner = "draw"
-            self.message = "НИЧЬЯ!"
-        elif player_finished:
+        if self.is_end(self.player_field):
             self.game_over = True
             self.winner = "player"
-            self.message = "ВЫ ПОБЕДИЛИ"
-        elif bot_finished:
-            self.game_over = True
-            self.winner = "bot"
-            self.message = "БОТ ПОБЕДИЛ!"
+            self.message = "ПОЗДРАВЛЯЮ! Вы победили!"
+        else:
+            self.bot_turn()
 
-        # Если никто не победил, игра продолжается, message обновится в bot_turn
         return True
 
     def pass_tile(self):
-        if self.game_over or self.current_tile is None:
+        if self.game_over:
+            self.message = "Игра окончена!"
+            return False
+        if self.current_tile is None:
+            self.message = "У вас нет числа, которое можно сбросить."
             return False
 
+        passed_tile = self.current_tile
         self.opened_numbers.append(self.current_tile)
+        self.message = f"Вы сбросили {passed_tile} на стол."
         self.current_tile = None
 
         self.bot_turn()
-
-        # Проверяем, не победил ли бот после вашего паса
-        if self.is_end(self.bot_field):
-            self.game_over = True
-            self.winner = "bot"
-            self.message = "БОТ ПОБЕДИЛ!"
-
         return True
 
     def get_state(self):
